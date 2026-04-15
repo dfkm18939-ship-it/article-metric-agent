@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 数据指标智能助手</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────── -->
+<header class="app-header">
+  <span class="logo">📊</span>
+  <div class="title-group">
+    <h1>数据指标智能助手</h1>
+    <div class="subtitle">多模型协作 · 稿件指标智能查询系统（GPT + Gemini + Claude）</div>
+  </div>
+  <span class="badge">Beta</span>
+</header>
+
+<!-- ── Chat ───────────────────────────────────────────── -->
+<div class="chat-container" id="chat">
+  <!-- 消息由 JS 动态注入 -->
+</div>
+
+<!-- ── Input Area ─────────────────────────────────────── -->
+<div class="input-area">
+  <div class="quick-btns">
+    <button class="quick-btn">今年签发量</button>
+    <button class="quick-btn">各部门签发量</button>
+    <button class="quick-btn">本月趋势</button>
+    <button class="quick-btn">和去年比</button>
+  </div>
+  <div class="input-row">
+    <input
+      type="text"
+      id="user-input"
+      autocomplete="off"
+      placeholder="请输入您的数据问题，例如：今年签发了多少稿件？"
+    />
+    <button class="send-btn" id="send-btn">发送</button>
+  </div>
+</div>
+
+<!-- ECharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<!-- 应用逻辑 -->
+<script src="/static/app.js"></script>
+
+</body>
+</html>
