@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 # ── 常量 ─────────────────────────────────────────────────────
 STATUSES = ["draft", "finished", "signed", "published"]
-STATUS_WEIGHTS = [0.1, 0.2, 0.45, 0.25]  # 有意让 signed/published 更多
+STATUS_WEIGHTS = [0.10, 0.20, 0.45, 0.25]  # draft, finished, signed, published
 ARTICLE_TYPES = ["original", "reprint", "special", "test"]
 TYPE_WEIGHTS = [0.55, 0.25, 0.15, 0.05]
 DEPARTMENTS = ["要闻部", "社会部", "财经部", "科技部", "体育部", "娱乐部"]

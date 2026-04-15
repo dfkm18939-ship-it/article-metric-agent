@@ -183,11 +183,11 @@ class Orchestrator:
         original_query: str,
     ) -> dict:
         """处理用户澄清选项，继续查询流程"""
-        from gemini.ui_designer import _CALIBER_OPTIONS
+        from gemini.ui_designer import CALIBER_OPTIONS
 
         selected = next(
-            (o for o in _CALIBER_OPTIONS if o["label"] == choice.upper()),
-            _CALIBER_OPTIONS[0],
+            (o for o in CALIBER_OPTIONS if o["label"] == choice.upper()),
+            CALIBER_OPTIONS[0],
         )
 
         # 构造确定的意图，跳过再次澄清

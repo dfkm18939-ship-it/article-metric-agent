@@ -19,6 +19,7 @@ class MetricStore:
     def __init__(self, metrics_dir: str = METRICS_DIR):
         self._metrics: dict[str, dict] = {}
         self._vector_store = VectorStore()
+        self._gemini_client = None  # lazy-initialized to avoid failure when no API key
         self._load_all(metrics_dir)
 
     # ── 加载 ──────────────────────────────────────────────────
@@ -45,12 +46,17 @@ class MetricStore:
         if self._vector_store.count() == 0 and self._metrics:
             self._index_all()
 
+    def _get_gemini(self):
+        """懒加载 GeminiClient，避免无 API Key 时启动失败"""
+        if self._gemini_client is None:
+            from core.llm_client import GeminiClient
+            self._gemini_client = GeminiClient()
+        return self._gemini_client
+
     def _index_all(self) -> None:
         """将所有指标向量化写入 ChromaDB（首次运行）"""
         try:
-            # 延迟导入，避免无 API Key 时崩溃
-            from core.llm_client import GeminiClient
-            gemini = GeminiClient()
+            gemini = self._get_gemini()
 
             texts, embeddings, metadatas, ids = [], [], [], []
             for mid, metric in self._metrics.items():
@@ -87,8 +93,7 @@ class MetricStore:
     def search(self, query: str, k: int = 3) -> list[dict]:
         """语义搜索，返回最相似的 k 个指标（含完整定义）"""
         try:
-            from core.llm_client import GeminiClient
-            emb = GeminiClient().embed(query)
+            emb = self._get_gemini().embed(query)
         except Exception:
             emb = []
 

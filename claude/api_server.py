@@ -45,7 +45,7 @@ async def query(request: QueryRequest):
         return result
     except Exception as e:
         logger.error("POST /api/query error: %s", e)
-        return {"type": "error", "message": str(e)}
+        return {"type": "error", "message": "查询处理失败，请稍后重试"}
 
 
 @router.post("/api/clarify")
@@ -60,7 +60,7 @@ async def clarify(request: ClarifyRequest):
         return result
     except Exception as e:
         logger.error("POST /api/clarify error: %s", e)
-        return {"type": "error", "message": str(e)}
+        return {"type": "error", "message": "澄清处理失败，请稍后重试"}
 
 
 @router.get("/api/metrics")

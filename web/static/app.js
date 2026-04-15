@@ -9,8 +9,17 @@ const API = {
 };
 
 // ── 状态 ──────────────────────────────────────────────────
+// 使用 crypto.randomUUID 生成会话 ID，并持久化到 localStorage
+function getOrCreateUserId() {
+  const stored = localStorage.getItem('metric_agent_user_id');
+  if (stored) return stored;
+  const id = 'user_' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36));
+  localStorage.setItem('metric_agent_user_id', id);
+  return id;
+}
+
 const state = {
-  userId:        'user_' + Math.random().toString(36).slice(2, 10),
+  userId:        getOrCreateUserId(),
   lastQuery:     '',
   chartInstance: null,
 };
@@ -196,8 +205,21 @@ function toggleSQL(toggleEl) {
 }
 
 // ── DOM 辅助 ──────────────────────────────────────────────
-function appendUserMessage(html) {
-  appendMessage(html, 'user');
+function appendUserMessage(text) {
+  // User input is plain text — must NOT be rendered as HTML
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar user';
+  avatar.textContent = '👤';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;  // safe: textContent never interprets HTML
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  chatContainer.appendChild(row);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  return row;
 }
 
 function appendBotMessage(html) {

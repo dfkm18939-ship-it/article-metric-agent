@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 _SYSTEM = """你是 UI/UX 设计师，专注于数据查询澄清交互设计。
 生成简洁的 HTML 澄清方案，包含选项按钮，不要使用任何 CSS 框架，使用 class 名。"""
 
-_CALIBER_OPTIONS = [
+CALIBER_OPTIONS = [
     {
         "label": "A",
         "metric_id": "article_signed_count",
@@ -52,7 +52,7 @@ class UIDesigner:
 歧义原因：{ambiguous_reason}
 
 为以下三个口径选项生成澄清交互 HTML：
-{[f"{o['label']}. {o['name']}：{o['desc']}" for o in _CALIBER_OPTIONS]}
+{[f"{o['label']}. {o['name']}：{o['desc']}" for o in CALIBER_OPTIONS]}
 
 HTML 要求：
 - 外层 <div class="clarify-container">
@@ -74,7 +74,7 @@ HTML 要求：
     @staticmethod
     def _fallback_html(hint: str) -> str:
         buttons = ""
-        for opt in _CALIBER_OPTIONS:
+        for opt in CALIBER_OPTIONS:
             rec_class = " recommended" if opt["recommended"] else ""
             rec_badge = '<span class="recommend-badge">推荐</span>' if opt["recommended"] else ""
             buttons += f"""
