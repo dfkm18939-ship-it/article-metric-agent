@@ -36,8 +36,8 @@ async def query_metrics(request: QueryRequest):
         orchestrator = Orchestrator()
         result = await orchestrator.run(request.query, request.user_id)
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="查询处理失败，请稍后重试")
 
 
 @router.get("/metrics")

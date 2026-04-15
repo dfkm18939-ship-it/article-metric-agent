@@ -116,9 +116,13 @@
       if (data.type === 'clarify') {
         let html = '❓ 请确认统计口径：<br>';
         (data.options || []).forEach(o => {
-          html += `<br>• <span style="cursor:pointer;color:#1890ff" onclick="ask('${o}')">${o}</span>`;
+          const safe = o.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          html += `<br>• <span style="cursor:pointer;color:#1890ff" data-opt="${safe}">${safe}</span>`;
         });
-        addMsg('bot', html);
+        const msgEl = addMsg('bot', html);
+        msgEl.querySelectorAll('[data-opt]').forEach(el => {
+          el.addEventListener('click', () => ask(el.dataset.opt));
+        });
       } else if (data.type === 'result') {
         const msgEl = addMsg('bot', data.summary_html || '查询完成');
         const meta = `<br><small style="color:#888">口径：${data.caliber} &nbsp;|&nbsp; ` +

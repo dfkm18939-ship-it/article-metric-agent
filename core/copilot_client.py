@@ -125,9 +125,9 @@ class CopilotClient:
                 data = response.json()
                 return data["data"][0]["embedding"]
         except Exception as e:
-            # 降级：返回空向量，不崩溃
+            # 降级：返回空向量（维度 1536 对应 text-embedding-3-small 模型），不崩溃
             print(f"Embedding 失败，降级处理: {e}")
-            return [0.0] * 1536
+            return [0.0] * 1536  # text-embedding-3-small 输出维度为 1536
 
 
 # 全局单例

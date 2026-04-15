@@ -43,9 +43,10 @@ async def handle_copilot_extension(request: Request):
             user_message = user_message.replace("@article-metric-agent", "").strip()
             break
 
-    # 提取 GitHub Token 作为用户 ID（取哈希值，不存储原始 Token）
+    # 提取 GitHub Token 作为用户 ID（取 SHA-256 哈希前缀，不存储原始 Token）
+    import hashlib
     github_token = request.headers.get("X-GitHub-Token", "anonymous")
-    user_id = f"gh_{hash(github_token) % 100000}"
+    user_id = "gh_" + hashlib.sha256(github_token.encode()).hexdigest()[:10]
 
     async def generate():
         try:
@@ -78,25 +79,27 @@ async def handle_copilot_extension(request: Request):
                 response_text = f"查询出现问题：{result.get('message', '未知错误')}"
 
             # 流式输出（SSE 格式）
-            words = response_text.split(" ")
-            for i, word in enumerate(words):
-                chunk = word + (" " if i < len(words) - 1 else "")
+            # 按字符分块，兼容中文（中文无空格分隔）
+            chunk_size = 4
+            chars = list(response_text)
+            for i in range(0, len(chars), chunk_size):
+                chunk = "".join(chars[i : i + chunk_size])
                 sse_data = {
                     "id": f"chatcmpl-{i}",
                     "object": "chat.completion.chunk",
                     "choices": [{"delta": {"content": chunk}, "index": 0}],
                 }
-                yield f"data: {json.dumps(sse_data)}\n\n"
+                yield f"data: {json.dumps(sse_data, ensure_ascii=False)}\n\n"
                 await asyncio.sleep(0.02)
 
             # 结束信号
             yield "data: [DONE]\n\n"
 
-        except Exception as e:
+        except Exception:
             error_sse = {
                 "id": "error",
                 "object": "chat.completion.chunk",
-                "choices": [{"delta": {"content": f"处理失败：{str(e)}"}, "index": 0}],
+                "choices": [{"delta": {"content": "处理失败，请稍后重试。"}, "index": 0}],
             }
             yield f"data: {json.dumps(error_sse)}\n\n"
             yield "data: [DONE]\n\n"
