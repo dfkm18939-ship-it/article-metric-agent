@@ -1,0 +1,20 @@
+# 稿件指标智能查询系统 — 依赖列表
+# 统一通过 GitHub Copilot API 访问多模型，只需一个 GITHUB_TOKEN
+
+# Web 框架
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+
+# HTTP 客户端（直接调用 Copilot API，替代 openai/anthropic/google SDK）
+httpx>=0.27.0
+
+# 签名验证（Copilot Extension 生产环境使用）
+cryptography>=41.0.0
+
+# 工具库
+python-dotenv>=1.0.0
+
+# 以下 SDK 已被 httpx + Copilot API 替代，保留为可选注释
+# openai>=1.3.0
+# anthropic>=0.7.0
+# google-generativeai>=0.3.0

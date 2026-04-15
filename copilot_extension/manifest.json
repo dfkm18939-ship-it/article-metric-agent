@@ -1,0 +1,19 @@
+{
+  "name": "article-metric-agent",
+  "display_name": "稿件指标智能助手",
+  "description": "查询新闻媒体稿件生产指标，支持签发量、成品量、发布量等多维度分析",
+  "version": "1.0.0",
+  "homepage_url": "https://github.com/dfkm18939-ship-it/article-metric-agent",
+  "callback_url": "https://your-domain.com/copilot/callback",
+  "pre_authorization_url": "https://your-domain.com/copilot/auth",
+  "capabilities": {
+    "type": "agent",
+    "discovery": {
+      "description": "查询稿件生产相关指标，例如签发量、各部门对比、时间趋势分析"
+    }
+  },
+  "permissions": {
+    "content_references": true,
+    "issues": "read"
+  }
+}
