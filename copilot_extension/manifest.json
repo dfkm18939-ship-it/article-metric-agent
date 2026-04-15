@@ -1,0 +1,20 @@
+{
+  "name": "稿件指标智能助手",
+  "slug": "article-metric-agent",
+  "description": "查询稿件生产指标，支持签发量、发布量等多维度分析",
+  "homepage_url": "https://github.com/dfkm18939-ship-it/article-metric-agent",
+  "capabilities": {
+    "actions": true,
+    "conversations": true
+  },
+  "interactions": {
+    "agent": {
+      "description": "稿件指标查询Agent",
+      "examples": [
+        "今年签发了多少稿件？",
+        "上个月各部门签发量对比",
+        "本月签发趋势"
+      ]
+    }
+  }
+}

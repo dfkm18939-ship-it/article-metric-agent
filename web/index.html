@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>稿件指标智能助手</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+           background: #f0f2f5; color: #333; }
+    .app { display: flex; flex-direction: column; height: 100vh; max-width: 960px;
+           margin: 0 auto; padding: 16px; gap: 12px; }
+    header { background: #1890ff; color: #fff; padding: 14px 20px; border-radius: 8px;
+             display: flex; align-items: center; gap: 10px; }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header .badge { font-size: 11px; background: rgba(255,255,255,.25); padding: 2px 8px;
+                    border-radius: 10px; }
+    .chat-area { flex: 1; overflow-y: auto; background: #fff; border-radius: 8px;
+                 padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; line-height: 1.6; }
+    .msg.user { align-self: flex-end; background: #1890ff; color: #fff; border-bottom-right-radius: 4px; }
+    .msg.bot  { align-self: flex-start; background: #f5f5f5; border-bottom-left-radius: 4px; }
+    .msg.bot strong { color: #1890ff; }
+    .chart-wrap { width: 100%; height: 260px; margin-top: 10px; }
+    .input-row { display: flex; gap: 8px; }
+    .input-row input { flex: 1; padding: 10px 14px; border: 1px solid #d9d9d9;
+                        border-radius: 8px; font-size: 14px; outline: none; }
+    .input-row input:focus { border-color: #1890ff; }
+    .input-row button { padding: 10px 20px; background: #1890ff; color: #fff;
+                         border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .input-row button:hover { background: #40a9ff; }
+    .input-row button:disabled { background: #bfbfbf; cursor: not-allowed; }
+    .examples { display: flex; gap: 8px; flex-wrap: wrap; }
+    .examples span { font-size: 12px; color: #666; padding: 4px 10px; border: 1px solid #d9d9d9;
+                      border-radius: 12px; cursor: pointer; background: #fff; }
+    .examples span:hover { border-color: #1890ff; color: #1890ff; }
+    details { margin-top: 8px; font-size: 12px; color: #888; }
+    details summary { cursor: pointer; }
+    pre { background: #282c34; color: #abb2bf; padding: 10px; border-radius: 6px;
+          overflow-x: auto; margin-top: 6px; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span style="font-size:22px">📊</span>
+    <h1>稿件指标智能助手</h1>
+    <span class="badge">Copilot Extension</span>
+  </header>
+
+  <div class="chat-area" id="chatArea">
+    <div class="msg bot">
+      👋 您好！我是稿件指标智能助手，可以帮您查询签发量、发布量等指标数据。<br>
+      试试下面的示例问题，或直接输入您的问题！
+    </div>
+  </div>
+
+  <div class="examples">
+    <span onclick="ask(this.textContent)">今年签发了多少稿件？</span>
+    <span onclick="ask(this.textContent)">上个月各部门签发量对比</span>
+    <span onclick="ask(this.textContent)">本月签发趋势</span>
+    <span onclick="ask(this.textContent)">本年度发布量统计</span>
+  </div>
+
+  <div class="input-row">
+    <input id="queryInput" type="text" placeholder="请输入查询问题，如：今年签发了多少稿件？"
+           onkeydown="if(event.key==='Enter') sendQuery()" />
+    <button id="sendBtn" onclick="sendQuery()">查询</button>
+  </div>
+</div>
+
+<script>
+  const chatArea = document.getElementById('chatArea');
+  const queryInput = document.getElementById('queryInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  function ask(text) { queryInput.value = text; sendQuery(); }
+
+  function addMsg(role, html) {
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = html;
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return div;
+  }
+
+  function renderChart(option, container) {
+    const wrap = document.createElement('div');
+    wrap.className = 'chart-wrap';
+    container.appendChild(wrap);
+    const chart = echarts.init(wrap);
+    chart.setOption(option);
+    window.addEventListener('resize', () => chart.resize());
+  }
+
+  async function sendQuery() {
+    const query = queryInput.value.trim();
+    if (!query) return;
+    queryInput.value = '';
+    sendBtn.disabled = true;
+
+    addMsg('user', query);
+    const thinkingMsg = addMsg('bot', '⏳ 正在查询中，请稍候...');
+
+    try {
+      const res = await fetch('/api/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, user_id: 'web_user' })
+      });
+      const data = await res.json();
+      thinkingMsg.remove();
+
+      if (data.type === 'clarify') {
+        let html = '❓ 请确认统计口径：<br>';
+        (data.options || []).forEach(o => {
+          const safe = o.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          html += `<br>• <span style="cursor:pointer;color:#1890ff" data-opt="${safe}">${safe}</span>`;
+        });
+        const msgEl = addMsg('bot', html);
+        msgEl.querySelectorAll('[data-opt]').forEach(el => {
+          el.addEventListener('click', () => ask(el.dataset.opt));
+        });
+      } else if (data.type === 'result') {
+        const msgEl = addMsg('bot', data.summary_html || '查询完成');
+        const meta = `<br><small style="color:#888">口径：${data.caliber} &nbsp;|&nbsp; ` +
+          `时间：${(data.time_range||{}).start||''} ~ ${(data.time_range||{}).end||''}</small>`;
+        msgEl.innerHTML += meta;
+        if (data.sql) {
+          const details = document.createElement('details');
+          details.innerHTML = `<summary>查看 SQL</summary><pre>${data.sql}</pre>`;
+          msgEl.appendChild(details);
+        }
+        if (data.chart && data.chart.echarts_option) {
+          renderChart(data.chart.echarts_option, msgEl);
+        }
+      } else {
+        addMsg('bot', `⚠️ ${data.message || '查询失败，请重试'}`);
+      }
+    } catch (e) {
+      thinkingMsg.remove();
+      addMsg('bot', `❌ 请求失败：${e.message}`);
+    } finally {
+      sendBtn.disabled = false;
+      queryInput.focus();
+    }
+  }
+</script>
+</body>
+</html>
