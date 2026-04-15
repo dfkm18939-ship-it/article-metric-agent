@@ -1,0 +1,134 @@
+metric_id: article_signed_count
+metric_name: 稿件签发通过量
+metric_alias:
+  - 签发量
+  - 签发稿件数
+  - 过审稿件数
+  - 生产稿件数
+  - 有多少稿件
+  - 生产了多少
+  - 今年稿件
+
+definition:
+  简述: 在统计时间范围内，通过全部审核流程并获得签发确认的稿件总数
+  完整说明: 稿件签发通过量是衡量内容团队整体生产效率的核心指标，反映了从稿件创建到审核通过完整链路的最终产出。只统计最终审核通过（status='signed'）且未被删除的稿件，以签发时间（signed_at）为统计口径。
+  业务价值:
+    - 衡量内容团队生产能力
+    - 评估审核流程效率
+    - 作为生产KPI考核基准
+  与相关指标的关系:
+    上游指标: 稿件成品量
+    下游指标: 稿件发布量
+    派生指标:
+      - 签发率 = 签发量 / 成品量
+      - 发布率 = 发布量 / 签发量
+
+calculation:
+  统计方式: COUNT(DISTINCT article_id)
+  核心条件:
+    status_field: status
+    status_value: signed
+    time_field: signed_at
+  纳入规则:
+    - 原创稿件
+    - 转载稿件
+    - 专题稿件
+    - 签发后被退回重新签发的取最新签发时间
+  排除规则:
+    - 仅完成成品未进入审核的草稿
+    - 审核中被驳回未重新提交的稿件
+    - 测试稿件 article_type = 'test'
+    - 已删除归档的稿件 is_deleted = 1
+  去重规则:
+    - 同一稿件多次签发只计最新一次
+    - 以 article_id 为唯一主键去重
+
+data_source:
+  主表: fact_article_workflow
+  time_field: signed_at
+  key_field: article_id
+  sql_template: |
+    SELECT COUNT(DISTINCT a.article_id) AS signed_count
+    FROM fact_article_workflow a
+    WHERE a.status = 'signed'
+      AND a.signed_at BETWEEN '{start_date}' AND '{end_date}'
+      AND a.article_type != 'test'
+      AND a.is_deleted = 0
+      {dimension_filter}
+
+dimensions:
+  时间维度:
+    - name: 日
+      field: DATE(signed_at)
+      alias: [每天, 今天, 昨天, 当天]
+    - name: 周
+      field: strftime('%Y-%W', signed_at)
+      alias: [本周, 上周, 每周]
+    - name: 月
+      field: strftime('%Y-%m', signed_at)
+      alias: [本月, 上月, 每月]
+    - name: 年
+      field: strftime('%Y', signed_at)
+      alias: [今年, 去年, 全年]
+  业务维度:
+    - name: 部门
+      field: dept_name
+      alias: [部门, 频道, 哪个部门, 各部门]
+    - name: 稿件类型
+      field: article_type
+      alias: [原创, 转载, 类型]
+    - name: 作者
+      field: author_name
+      alias: [作者, 记者, 谁写的]
+    - name: 栏目
+      field: column_name
+      alias: [栏目, 哪个栏目]
+
+business_rules:
+  歧义映射:
+    生产了多少: article_signed_count
+    有多少稿件: article_signed_count
+    生产指标: article_signed_count
+    发布了多少: article_published_count
+    写了多少: article_finished_count
+    上线了多少: article_published_count
+  默认时间: 今年
+  权限规则:
+    普通编辑: 只能查看本人数据
+    部门主编: 可查看本部门数据
+    总编: 可查看全部数据
+    数据分析师: 可查看全部数据
+  异常阈值:
+    日最小值: 10
+    日最大值: 500
+    环比下降预警: 30
+
+examples:
+  - question: 今年生产了多少稿件
+    metric: article_signed_count
+    time: 今年
+    dimension: null
+
+  - question: 上个月各部门签发量是多少
+    metric: article_signed_count
+    time: 上月
+    dimension: dept_name
+
+  - question: 今天签发了多少
+    metric: article_signed_count
+    time: 今天
+    dimension: null
+
+  - question: 和去年比增长了多少
+    metric: article_signed_count
+    time: [今年, 去年]
+    计算: 同比增长率
+
+  - question: 上周各频道签发量
+    metric: article_signed_count
+    time: 上周
+    dimension: dept_name
+
+  - question: 我们稿件多少
+    ambiguous: true
+    action: 触发澄清话术
