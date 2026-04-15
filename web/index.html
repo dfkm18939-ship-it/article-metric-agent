@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 稿件指标智能助手</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <!-- ECharts CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-title">📊 稿件指标智能助手</div>
+    <div class="header-role">
+      <span class="role-badge" id="roleBadge">总编</span>
+      <span class="user-id" id="userIdDisplay">user_001</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="app-main">
+
+  <!-- 左侧快捷问题面板 -->
+  <aside class="sidebar">
+    <div class="sidebar-title">💡 快捷查询</div>
+    <div class="quick-queries">
+      <button class="quick-btn" onclick="quickQuery('今年签发量是多少')">今年签发量</button>
+      <button class="quick-btn" onclick="quickQuery('上个月各部门签发量对比')">各部门对比</button>
+      <button class="quick-btn" onclick="quickQuery('本月签发量趋势')">本月趋势</button>
+      <button class="quick-btn" onclick="quickQuery('今天签发了多少稿件')">今日签发</button>
+      <button class="quick-btn" onclick="quickQuery('今年和去年签发量对比')">同比对比</button>
+    </div>
+
+    <div class="sidebar-title mt-16">📋 指标说明</div>
+    <div class="metric-hint">
+      <div class="metric-item">
+        <span class="dot dot-blue"></span>签发量 = 审核通过稿件数
+      </div>
+      <div class="metric-item">
+        <span class="dot dot-green"></span>以 signed_at 为统计口径
+      </div>
+      <div class="metric-item">
+        <span class="dot dot-orange"></span>排除测试稿 &amp; 已删除
+      </div>
+    </div>
+  </aside>
+
+  <!-- 中部对话区 -->
+  <section class="chat-area" id="chatArea">
+    <!-- 欢迎消息 -->
+    <div class="message assistant-message">
+      <div class="message-avatar">🤖</div>
+      <div class="message-bubble">
+        <p>您好！我是稿件指标智能助手，由 <strong>GPT + Gemini + Claude</strong> 三模型协作驱动。</p>
+        <p>您可以直接问我：</p>
+        <ul>
+          <li>「今年签发量是多少？」</li>
+          <li>「上个月各部门签发量对比」</li>
+          <li>「今天有多少稿件签发？」</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════ INPUT ═══════════════ -->
+<div class="input-area">
+  <div class="input-inner">
+    <textarea
+      id="queryInput"
+      class="query-input"
+      placeholder="请输入您的查询，例如：今年签发了多少稿件？"
+      rows="1"
+    ></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendQuery()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+  <div class="input-hint">按 Enter 发送 · Shift+Enter 换行</div>
+</div>
+
+<!-- Loading 遮罩 -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none;">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">正在分析您的问题...</div>
+    <div class="loading-steps">
+      <div class="step" id="step1">🔍 GPT 意图识别</div>
+      <div class="step" id="step2">📝 Claude 生成 SQL</div>
+      <div class="step" id="step3">✅ 交叉验证</div>
+      <div class="step" id="step4">📊 Gemini 渲染结果</div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
