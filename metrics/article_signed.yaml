@@ -1,0 +1,161 @@
+# metrics/article_signed.yaml
+# 稿件签发通过量 — 完整语义化指标定义
+
+metric_id: article_signed_count
+metric_name: 稿件签发通过量
+metric_alias:
+  - 签发量
+  - 签发稿件数
+  - 过审稿件数
+  - 生产稿件数
+  - 有多少稿件
+  - 生产了多少
+
+definition:
+  简述: 在统计时间范围内，通过全部审核流程并获得签发确认的稿件总数
+  完整说明: >
+    稿件签发通过量统计在指定时间段内，状态流转到 "signed"（已签发）的唯一稿件数。
+    签发时间以 signed_at 字段为准，同一稿件多次退回重签只计一次（DISTINCT article_id）。
+    测试稿件（article_type='test'）及已删除稿件（is_deleted=1）一律排除在外。
+  业务价值: >
+    衡量内容团队整体生产效率的核心指标，可横向对比各部门产能、纵向追踪同环比变化，
+    是编辑部 KPI 考核和排期规划的基础数据。
+  相关指标关系:
+    article_finished_count: 成品量（已完稿但未签发）
+    article_published_count: 发布量（已上线，包含签发后再发布）
+
+calculation:
+  统计方式: COUNT(DISTINCT article_id)
+  核心条件:
+    status_field: status
+    status_value: signed
+    time_field: signed_at
+  纳入规则:
+    - status = 'signed'
+    - signed_at 在指定时间范围内
+    - is_deleted = 0
+  排除规则:
+    - article_type = 'test'
+    - is_deleted = 1
+  去重规则: >
+    以 article_id 为唯一键，同一稿件多次签发只计 1 篇
+
+data_source:
+  主表: fact_article_workflow
+  关联表: []
+  time_field: signed_at
+  key_field: article_id
+  字段说明:
+    article_id: 稿件唯一 ID
+    status: 状态（draft/finished/signed/published）
+    signed_at: 签发时间
+    created_at: 创建时间（不用于签发量统计）
+    article_type: 稿件类型（original/reprint/special/test）
+    is_deleted: 是否删除（0=正常，1=已删）
+    dept_name: 所属部门
+    author_name: 作者名称
+    column_name: 所属栏目
+  sql_template: |
+    SELECT COUNT(DISTINCT a.article_id) AS signed_count
+    FROM fact_article_workflow a
+    WHERE a.status = 'signed'
+      AND a.signed_at BETWEEN '{start_date}' AND '{end_date}'
+      AND a.article_type != 'test'
+      AND a.is_deleted = 0
+      {dimension_filter}
+
+dimensions:
+  - name: 部门
+    field: dept_name
+    alias:
+      - 部门
+      - 频道
+      - 哪个部门
+      - 各部门
+  - name: 稿件类型
+    field: article_type
+    alias:
+      - 原创
+      - 转载
+      - 类型
+      - 稿件类型
+  - name: 作者
+    field: author_name
+    alias:
+      - 作者
+      - 记者
+      - 谁写的
+      - 编辑
+  - name: 栏目
+    field: column_name
+    alias:
+      - 栏目
+      - 版面
+      - 哪个栏目
+
+business_rules:
+  歧义映射:
+    生产了多少: article_signed_count
+    有多少稿件: article_signed_count
+    过审了多少: article_signed_count
+    发布了多少: article_published_count
+    上线了多少: article_published_count
+    写了多少: article_finished_count
+    完稿了多少: article_finished_count
+  默认时间: 当年
+  权限规则:
+    admin: 可查所有部门和作者
+    editor: 只能查询自己（author_name = 当前用户）
+    dept_head: 只能查本部门（dept_name = 当前用户部门）
+  异常阈值:
+    日最小值: 10
+    日最大值: 500
+
+examples:
+  - question: 今年生产了多少稿件
+    metric: article_signed_count
+    time: 今年
+    dimension: null
+    expect_clarify: false
+
+  - question: 上个月各部门签发量
+    metric: article_signed_count
+    time: 上月
+    dimension: dept_name
+    expect_clarify: false
+
+  - question: 今天签发了多少
+    metric: article_signed_count
+    time: 今天
+    dimension: null
+    expect_clarify: false
+
+  - question: 去年整年的签发量是多少
+    metric: article_signed_count
+    time: 去年
+    dimension: null
+    expect_clarify: false
+
+  - question: 有多少稿件
+    metric: article_signed_count
+    time: 今年
+    dimension: null
+    expect_clarify: true
+
+  - question: 生产了多少
+    metric: article_signed_count
+    time: 今年
+    dimension: null
+    expect_clarify: true
+
+  - question: 发布了多少
+    metric: article_published_count
+    time: 今年
+    dimension: null
+    expect_clarify: true
+
+  - question: 各栏目本月签发量对比
+    metric: article_signed_count
+    time: 本月
+    dimension: column_name
+    expect_clarify: false
